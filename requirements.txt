@@ -1,0 +1,8 @@
+numpy
+pandas
+chromadb
+langchain
+langchain_community
+langchain-google-vertexai
+pypdf
+streamlit
