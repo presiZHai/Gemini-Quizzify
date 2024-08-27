@@ -90,8 +90,13 @@ Please follow these steps to contribute:
 ## Acknowledgments
 This project is based on Mission-Quizify, developed by RadicalXDev. A big thank you to the entire team for providing the foundation for this project and the platform for honing our skills and expertise.
 
-![Radical AI](https://www.radicalai.org/) - For providing the challenges and inspiration that drove this project.
-![Streamlit](https://streamlit.io/) - For facilitating the development of the user interface.
-![Google Cloud Platform](https://cloud.google.com/) - For offering the APIs and services essential to this project.
-![Langchain](https://langchain.com/) - For providing the framework and advanced text embeddings technology.
-![Chroma](https://www.trychroma.com/) - For providing the powerful vector storage and retrieval solutions.
+![Radical AI](https://www.radicalai.org/) 
+- For providing the challenges and inspiration that drove this project.
+![Streamlit](https://www.streamlit.io/) 
+- For facilitating the development of the user interface.
+![Google Cloud Platform](https://www.cloud.google.com/) 
+- For offering the APIs and services essential to this project.
+![Langchain](https://www.langchain.com/) 
+- For providing the framework and advanced text embeddings technology.
+![Chroma](https://www.trychroma.com/) 
+- For providing the powerful vector storage and retrieval solutions.
