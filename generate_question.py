@@ -2,63 +2,41 @@ import os
 import sys
 import json
 import streamlit as st
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+from langchain_core.prompts import PromptTemplate
+from langchain_google_vertexai import VertexAI
+from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 
 # Add the path for custom modules
-sys.path.append(os.path.abspath('../../'))
-
-from pdf_processor import DocumentProcessor
+sys.path.append(os.path.abspath('../../')) 
+from document_processor import DocumentProcessor
 from embedding_client import EmbeddingClient
 from chromacollection_creator import ChromaCollectionCreator
 
-from langchain_core.prompts import PromptTemplate
-from langchain_google_vertexai import VertexAI
-
-from langchain_core.output_parsers import JsonOutputParser
-from pydantic import BaseModel, Field
-from typing import List
-
-class Choice(BaseModel):
-    key: str = Field(description="The key for the choice, should be one of 'A', 'B', 'C', or 'D'.")
-    value: str = Field(description="The text of the choice.")
-
-class QuestionSchema(BaseModel):
-    question: str = Field(description="The text of the question.")
-    choices: List[Choice] = Field(description="A list of choices for the question, each with a key and a value.")
-    answer: str = Field(description="The key of the correct answer from the choices list.")
-    explanation: str = Field(description="An explanation as to why the answer is correct.")
-
-model_config = {
-    "json_schema_extra": {
-        "examples": [
-            {
-                "question": "What is the capital of France?",
-                "choices": [
-                    {"key": "A", "value": "Berlin"},
-                    {"key": "B", "value": "Madrid"},
-                    {"key": "C", "value": "Paris"},
-                    {"key": "D", "value": "Rome"}
-                ],
-                "answer": "C",
-                "explanation": "Paris is the capital of France."
-            }
-        ]
-    }
-}
-
 class QuizGenerator:
     def __init__(self, topic=None, num_questions=1, vectorstore=None):
-        self.topic = topic if topic else "General Knowledge"
+        """
+        Initializes the QuizGenerator with a required topic, the number of questions for the quiz,
+        and an optional vectorstore for querying related information.
+
+        :param topic: A string representing the required topic of the quiz.
+        :param num_questions: An integer representing the number of questions to generate for the quiz, up to a maximum
+        of 10.
+        :param vectorstore: An optional vectorstore instance (e.g., ChromaDB) to be used for querying information
+        related to the quiz topic.
+        """
+        if not topic:
+            self.topic =  "General Knowledge"
+        else:
+            self.topic = topic
+
         if num_questions > 10:
             raise ValueError("Number of questions cannot exceed 10.")
         self.num_questions = num_questions
+        
         self.vectorstore = vectorstore
         self.llm = None
-        self.parser = JsonOutputParser(pydantic_object=QuestionSchema)
-        self.question_bank = []  # Initialize the question bank to store questions
+        
+        # Initialize the question bank to store questions
         self.system_template = """
             You are a subject matter expert on the topic: {topic}
             
@@ -68,140 +46,157 @@ class QuizGenerator:
             3. Provide the correct answer for the question from the list of answers as key "answer"
             4. Provide an explanation as to why the answer is correct as key "explanation"
             
-            {format_instructions}
+            You must respond as a JSON object with the following structure:
+            {{
+                "question": "<question>",
+                "choices": [
+                    {{"key": "A", "value": "<choice>"}},
+                    {{"key": "B", "value": "<choice>"}},
+                    {{"key": "C", "value": "<choice>"}},
+                    {{"key": "D", "value": "<choice>"}}
+                ],
+                "answer": "<answer key from choices list>",
+                "explanation": "<explanation as to why the answer is correct>"
+            }}
             
             Context: {context}
             """
 
     def init_llm(self):
+        """
+        Task: Initialize and configures the Large Language Model (LLM) for quiz question generation.
+
+        Overview:
+        This method configures the LLM by setting parameters like model name, temperature, and max output tokens, 
+        preparing it for quiz question generation using the provided topic and context from the vectorstore.
+
+        Steps:
+        1. Set the LLM's model name to "gemini-pro."
+        2. Configure the 'temperature' to control output randomness, with lower values yielding more deterministic results.
+        3. Specify 'max_output_tokens' to limit the length of the generated text.
+        4. Initialize the LLM with these parameters for quiz question generation.
+
+        :return: An instance or configuration for the LLM.
+
+        Implementation:
+        - Use the VertexAI class to instantiate the LLM with the configured settings.
+        - Assign the LLM instance to 'self.llm' for future use in generating questions.
+
+        Note: Ensure you have the necessary access or API keys if required by the model.
+        """
         try:
             self.llm = VertexAI(
                 model_name="gemini-pro",
-                temperature=0.8,
-                max_output_tokens=500
+                temperature=0.3,
+                max_output_tokens=1000
             )
-            logging.info("LLM initialized successfully.")
         except Exception as e:
-            logging.error(f"Error initializing LLM: {e}")
-            raise
+            print(f"Error initializing LLM: {e}")
 
     def generate_question_with_vectorstore(self):
+        """
+        Task: Generate a quiz question using the provided topic and context from the vectorstore.
+
+        Overview:
+        This method retrieves relevant context from the vectorstore for the quiz topic and uses the LLM to 
+        generate a structured quiz question in JSON format. The process involves retrieving documents, 
+        creating a prompt, and invoking the LLM.
+
+        Prerequisites:
+        - Ensure the LLM is initialized via 'init_llm'.
+        - A vectorstore must be provided and accessible through 'self.vectorstore'.
+
+        Steps:
+        1. Verify the LLM and vectorstore are initialized.
+        2. Retrieve relevant context for the quiz topic from the vectorstore.
+        3. Format the topic and context into a structured prompt using the system template.
+        4. Invoke the LLM with the prompt to generate a quiz question.
+        5. Return the question in JSON format.
+
+        Implementation:
+        - Use 'RunnableParallel' and 'RunnablePassthrough' to integrate document retrieval and topic processing.
+        - Format the system template with the topic and retrieved context to create a prompt for the LLM.
+        - Generate the quiz question with the LLM and return the structured response.
+
+        Note: Raise a ValueError if the vectorstore is not provided.
+        """
+        
+        self.init_llm()
         if not self.llm:
-            self.init_llm()
+            raise Exception("Failed to initialise llm")
+        
         if not self.vectorstore:
-            raise ValueError("Vectorstore not provided.")
+            raise ValueError("Vectorstore is not initialized.")
+
+        retriever = self.vectorstore.as_retriever()
+        if not retriever:
+            raise Exception("Failed to initialise retriever")
         
-        from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+        system_template = "Generate a question based on the topic: {topic} and the context: {context}"
+        prompt_template = PromptTemplate.from_template(system_template)
+        if not prompt_template:
+            raise Exception("Failed to initialise prompt_template")
+        
+        # RunnableParallel allows Retriever to get relevant documents
+        # RunnablePassthrough allows chain.invoke to send self.topic to LLM
+        setup_and_retrieval = RunnableParallel(
+            {
+                "context": retriever, 
+                "topic": RunnablePassthrough()
+            }
+        )
+        if not setup_and_retrieval:
+           raise Exception("Failed to initialize the setup_and_retrieval")
+       
+        # Create a chain with the Retriever, PromptTemplate, and LLM 
+        chain = setup_and_retrieval | prompt_template | self.llm
+        if not chain:
+           raise Exception("Failed to initialize the chain")
 
-        try:
-            retriever = self.vectorstore.as_retriever()
-            prompt = PromptTemplate(
-                template=self.system_template,
-                input_variables=["topic", "context"],
-                partial_variables={"format_instructions": self.parser.get_format_instructions()},
-            )
-            setup_and_retrieval = RunnableParallel(
-                {"context": retriever, "topic": RunnablePassthrough()}
-            )
-            chain = setup_and_retrieval | prompt | self.llm | self.parser
-            response = chain.invoke(self.topic)
-            logging.info("Question generated successfully.")
-            return response
-        except Exception as e:
-            logging.error(f"Error generating question: {e}")
-            raise
+        # Invoke the chain with the topic as input
+        response = chain.invoke(self.topic)
+        return response
 
-    def generate_quiz(self) -> list:
-        self.question_bank = [] # Reset the question bank
-
-        for _ in range(self.num_questions):
-            try:
-                question = self.generate_question_with_vectorstore()
-
-                if self.validate_question(question):
-                    logging.info("Successfully generated unique question")
-                    self.question_bank.append(question)
-                else:
-                    logging.warning("Duplicate or invalid question detected.")
-                    for i in range(3):  # Retry limit of 3 attempts
-                        try:
-                            question_str = self.generate_question_with_vectorstore()
-                            question = json.loads(question_str)
-                            if self.validate_question(question):
-                                logging.info("Successfully generated unique question")
-                                self.question_bank.append(question)
-                                break
-                            else:
-                                logging.warning(f"Duplicate or invalid question detected - Attempt {i+1}")
-                        except json.JSONDecodeError:
-                            logging.error("Failed to decode question JSON.")
-                            continue
-            except Exception as e:
-                logging.error(f"Error generating quiz: {e}")
-                continue
-
-        return self.question_bank
-    
-    def validate_question(self, question: dict) -> bool:
-        if 'question' not in question or not question['question']:
-            raise ValueError("The dict object must contain a non-empty 'question' key")
-
-        is_unique = True
-        for question_iterated in self.question_bank:
-            if question_iterated['question'] == question['question']:
-                is_unique = False
-                break
-        return is_unique
-
-# Streamlit app code
+# Test the object
 if __name__ == "__main__":
-    try:
-        embed_config = {
-            "model_name": "textembedding-gecko@003",
-            "project": "quizzify-160824",
-            "location": "europe-west2"
-        }
-        
-        st.title("Quiz Builder")
-        
-        screen = st.empty()
-        with screen.container():
-            st.header("Quiz Builder")
-            processor = DocumentProcessor()
-            processor.ingest_documents()
-        
-            embed_client = EmbeddingClient(**embed_config)  
-            chroma_creator = ChromaCollectionCreator(processor, embed_client)
-        
-            question = None
-            question_bank = None
-        
-            with st.form("Load Data to Chroma"):
-                st.subheader("Quiz Builder")
-                st.write("Select PDFs for Ingestion, the topic for the quiz, and click Generate!")
-                
-                topic_input = st.text_input("Topic for Generative Quiz", placeholder="Enter the topic of the document")
-                questions = st.slider("Number of Questions", min_value=1, max_value=10, value=1)
-                
-                submitted = st.form_submit_button("Submit")
-                if submitted:
-                    try:
-                        chroma_creator.create_chroma_collection()
-                        st.write(f"Topic: {topic_input}")
-                        
-                        generator = QuizGenerator(topic_input, questions, chroma_creator)
-                        question_bank = generator.generate_quiz()
-                        question = question_bank[0] if question_bank else None
-                    except Exception as e:
-                        st.error(f"Error during quiz generation: {e}")
-        
-        if question_bank:
-            screen.empty()
-            with st.container():
-                st.header("Generated Quiz Questions")
-                for question in question_bank:
-                    st.write(question)
     
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        st.error(f"An error occurred: {e}")
+    embed_config = {
+        "model_name": "textembedding-gecko@003",
+        "project": "quizzify-160824",
+        "location": "europe-west2"
+    }
+
+    st.title("Quiz Builder")
+
+    screen = st.empty()
+    with screen.container():
+        st.header("Quiz Builder")
+        processor = DocumentProcessor()
+        processor.ingest_documents()
+
+        embed_client = EmbeddingClient(**embed_config)  
+        chroma_creator = ChromaCollectionCreator(processor, embed_client)
+
+        question = None
+
+        with st.form("Load Data to Chroma"):
+            st.subheader("Quiz Builder")
+            st.write("Select PDFs for Ingestion, the topic for the quiz, and click Generate!")
+            
+            topic_input = st.text_input("Topic for Generative Quiz", placeholder="Enter the topic of the document")
+            questions = st.slider("Number of Questions", min_value=1, max_value=10, value=1)
+            
+            submitted = st.form_submit_button("Submit")
+            if submitted:
+                    chroma_creator.create_chroma_collection()
+                    st.write(f"Topic: {topic_input}")
+                    
+                    # Test Quiz generator
+                    generator = QuizGenerator(topic_input, questions, chroma_creator)
+                    question_bank = generator.generate_question_with_vectorstore()
+
+    if question:
+        screen.empty()
+        with st.container():
+            st.header("Generated Quiz Questions")
+            st.write(question)
