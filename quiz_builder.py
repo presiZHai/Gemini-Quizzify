@@ -4,11 +4,11 @@ import streamlit as st
 
 sys.path.append(os.path.abspath('../../'))
 
-from pdf_processor import DocumentProcessor
+from document_processor import DocumentProcessor
 from embedding_client import EmbeddingClient
 from chromacollection_creator import ChromaCollectionCreator
 
-"""
+# f"""
 # Task: Build a Quiz Builder with Streamlit and LangChain
 
 # Overview:
@@ -38,10 +38,10 @@ from chromacollection_creator import ChromaCollectionCreator
 # - Post form submission, verify that the documents have been processed and that a Chroma collection has been successfully created. The build-in methods will communicate the outcome of these operations to the user through appropriate feedback.
 
 # - Lastly, introduce a query input field post-Chroma collection creation. This field will gather user queries for generating quiz questions, showcasing the utility of the Chroma collection in sourcing information relevant to the quiz topic.
-"""
+# """
 
 if __name__ == "__main__":
-    #st.header("Quizzify")
+    st.header("Quizzify")
 
     # Configuration for EmbeddingClient
     embed_config = {
@@ -52,14 +52,14 @@ if __name__ == "__main__":
     
     screen = st.empty() # Screen 1, ingest documents
     with screen.container():
-        st.header("Quizzify")
+        #st.header("Quizzify")
         
         # 1) Initalize DocumentProcessor and Ingest Documents
         document_processor = DocumentProcessor()
         document_processor.ingest_documents()
         
         # 2) Initalize the EmbeddingClient from with embed config
-        embedding_client = embedding_client = EmbeddingClient(
+        embedding_client = EmbeddingClient(
             **embed_config
         )
         
