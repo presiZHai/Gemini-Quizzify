@@ -1,5 +1,11 @@
 # Gemini Quizzify - A Dynamic AI Quiz Generator
 
+## Presentation and Demon
+
+- **Presentation Slides**: [View Presentation](https://www.canva.com/design/DAGPC7e6diY/_1FIesatvlJHGdlrMKIaTQ/view?utm_content=DAGPC7e6diY&utm_campaign=designshare&utm_medium=link&utm_source=editor)
+- **Video Demo**: [Watch Video](https://www.loom.com/share/6d36397a49da40f6ba5574496c123b2e?t=329&sid=5f454b66-4ba4-48e1-8b03-278227fec820)
+
+
 ## Overview
 This project involves developing a Quiz Builder using a range of technologies, including Google Cloud Platform, Google Gemini, Vertex AI API, Vertex embeddings, Chromadb, Langchain, PDF loader, and Streamlit. It is part of the challenges set by Radical AI, with contributions focused on specific implementation steps.
 
@@ -98,4 +104,3 @@ This project is based on Mission-Quizify, developed by RadicalXDev. A big thank 
 - [Langchain](https://www.langchain.com/): For providing the framework and advanced text embeddings technology.
 
 - [Chroma](https://www.trychroma.com/): For providing the powerful vector storage and retrieval solutions.
-
