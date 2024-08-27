@@ -77,4 +77,21 @@ Screen State Handling manages the flow between different screens and forms in th
 ![Screen State Handling](images/screen_state_handling.png)
 
 **Output**
-![Output](images/output.png)
+![Output](images/outputs.png.png)
+
+## Contribution
+We welcome contributions to enhance the features and functionality of Gemini Explorer. 
+Please follow these steps to contribute: 
+* 1. Fork the repository. 
+* 2. Create a new branch for your feature or bug fix. 
+* 3. Commit your changes and push them to your branch. 
+* 4. Open a pull request with a detailed description of your changes.
+
+## Acknowledgments
+This project is based on Mission-Quizify, developed by RadicalXDev. A big thank you to the entire team for providing the foundation for this project and the platform for honing our skills and expertise.
+
+![Radical AI](https://www.radicalai.org/) - For providing the challenges and inspiration that drove this project.
+![Streamlit](https://streamlit.io/) - For facilitating the development of the user interface.
+![Google Cloud Platform](https://cloud.google.com/) - For offering the APIs and services essential to this project.
+![Langchain](https://langchain.com/) - For providing the framework and advanced text embeddings technology.
+![Chroma](https://www.trychroma.com/) - For providing the powerful vector storage and retrieval solutions.
