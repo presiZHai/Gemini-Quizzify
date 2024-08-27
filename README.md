@@ -6,11 +6,11 @@ This project involves developing a Quiz Builder using a range of technologies, i
 This Quiz Builder dynamically generates quizzes based on user-provided documents, ranging from textbooks to scholarly papers. The tool offers a tailored learning experience with instant feedback and comprehensive explanations, facilitating deeper comprehension and retention of knowledge.
 
 ## Tech Stack
-**Google's Vertex AI Platform:** Enables advanced machine learning capabilities using pre-trained models for embedding and processing natural language data, allowing for seamless integration with other AI-driven components.
-**Chromadb:** A vector database that stores and retrieves embeddings, enabling efficient similarity searches and comparisons across large datasets.
-**Langchain:** A framework that simplifies the integration and chaining of multiple language models, enhancing the dynamic generation and processing of content in the application.
-**Python 3.10:** The programming language used for developing this application, providing the flexibility and power needed to handle complex data processing and machine learning tasks.
-**Streamlit:** A powerful framework for building and deploying interactive web applications in Python, facilitating the creation of a user-friendly interface for the Quiz Builder.
+* **Google's Vertex AI Platform:** Enables advanced machine learning capabilities using pre-trained models for embedding and processing natural language data, allowing for seamless integration with other AI-driven components.
+* **Chromadb:** A vector database that stores and retrieves embeddings, enabling efficient similarity searches and comparisons across large datasets.
+* **Langchain:** A framework that simplifies the integration and chaining of multiple language models, enhancing the dynamic generation and processing of content in the application.
+* **Python 3.10:** The programming language used for developing this application, providing the flexibility and power needed to handle complex data processing and machine learning tasks.
+* **Streamlit:** A powerful framework for building and deploying interactive web applications in Python, facilitating the creation of a user-friendly interface for the Quiz Builder.
 
 ## Tasks:
 1. **Google Cloud, Vertex AI, & SDK Authentication:** Create a GCP account (if you don't have one), set up a project, enable the Vertex AI APIs, and manage service accounts with owner permissions.
@@ -44,15 +44,17 @@ This Quiz Builder dynamically generates quizzes based on user-provided documents
 ## Usage
 
 1. **GCloud authentication**
+```bash
 * Create a new Google Cloud project.
 * Enable the Vertex AI API for the project.
 * Create a service account with necessary roles (e.g., Owner, AI Platform Admin, Vertex AI Administrator, Vertex AI Model Creator).
 * Initialize Google Cloud in the terminal with `gcloud init`, follow the steps shown in the terminal, and run `gcloud auth application-default login` to log in to your Google Cloud account.
+```
 2. **Update the Scripts:** Modify the Python scripts as necessary with the Project ID and location.
 3. **Run the Streamlit App**: Launch the Streamlit application (`your_script.py` - main script) and view it in your browser at `http://localhost:8501`.
 
 
-## Project Streucture
+## Project Structure
 
 **Document Processing**
 Document processing involves creating a class that manages the ingestion of PDF documents. The process includes uploading PDFs via a Streamlit widget, chunking the documents into manageable pieces, and storing them for further use. The document processor handles temporary files, processes them into chunks, and returns a set of documents with associated metadata for later use in the system.
@@ -73,3 +75,6 @@ The Generate Quiz Algorithm method constructs a quiz by generating a specified n
 **Screen State Handling**
 Screen State Handling manages the flow between different screens and forms in the Quizify application. It utilizes Streamlit’s session state to keep track of the current question index and the status of the quiz, allowing users to navigate between questions without losing their progress. By storing and updating the question index and other relevant data in the session state, the application ensures a smooth and consistent user experience across different interactions and screens.
 ![Screen State Handling](images/screen_state_handling.png)
+
+**Output**
+![Output](images/output.png)
