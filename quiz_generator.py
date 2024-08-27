@@ -39,7 +39,7 @@ class QuizGenerator:
             1. Generate a question based on the topic provided and context as key "question"
             2. Provide 4 multiple choice answers to the question as a list of key-value pairs "choices"
             3. Provide the correct answer for the question from the list of answers as key "answer"
-            4. Provide an explanation as to why the answer is correct as key "explanation"
+            4. Provide an explanation for why the answer is correct or incorrect as the key "explanation."
             
             You must respond as a JSON object with the following structure:
             {{
@@ -51,7 +51,7 @@ class QuizGenerator:
                     {{"key": "D", "value": "<choice>"}}
                 ],
                 "answer": "<answer key from choices list>",
-                "explanation": "<explanation as to why the answer is correct>"
+                "explanation": "<explanation as to why the answer is correct or incorrect>"
             }}
             
             Context: {context}
