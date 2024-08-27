@@ -7,7 +7,7 @@ import streamlit as st
 sys.path.append(os.path.abspath('../../'))
 
 # Import from local packages
-from pdf_processor import DocumentProcessor
+from document_processor import DocumentProcessor
 from embedding_client import EmbeddingClient
 
 # Import Task libraries
@@ -62,18 +62,18 @@ class ChromaCollectionCreator:
                 doc = Document(page_content=text, metadata={"source": "local"})
                 texts.append(doc)
 
-        if texts:
+        if texts is not None:
             st.success(f"Successfully split pages into {len(texts)} documents!", icon="✔️")
 
         # Create the Chroma Collection
-        try:
-            self.db = Chroma.from_documents(
-                texts, 
-                self.embed_model.client, 
+        self.db = Chroma.from_documents(
+                documents=texts, 
+                embedding=self.embed_model.client, 
                 persist_directory=self.persistent_dir
             )
+        if self.db:
             st.success("Successfully created Chroma Collection!", icon="✔️")
-        except Exception as e:
+        else:
             st.error(f"Failed to create Chroma Collection: {e}", icon="🔔")
 
     def query_chroma_collection(self, query) -> Document:
@@ -84,14 +84,11 @@ class ChromaCollectionCreator:
         :returns: The first matching document with its similarity score, or an error message if no matches are found.
         """
         if self.db:
-            try:
-                docs = self.db.similarity_search_with_relevance_scores(query)
-                if docs:
-                    return docs[0]
-                else:
-                    st.error("No matching documents found!", icon="🔔")
-            except Exception as e:
-                st.error(f"Error during query: {e}", icon="🔔")
+            docs = self.db.similarity_search_with_relevance_scores(query)
+            if docs:
+                return docs[0]
+            else:
+                st.error("No matching documents found!", icon="🔔")
         else:
             st.error("Chroma Collection has not been created!", icon="🔔")
         return None
